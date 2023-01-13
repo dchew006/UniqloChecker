@@ -2,10 +2,13 @@ import requests
 from dataclasses import dataclass, asdict
 import pickle as pk
 import os
+from datetime import datetime
 
 #################### Credentials ####################
 chat_id = os.environ.get('CHAT_ID')
 token = os.environ.get('TOKEN')
+
+today = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
 @dataclass
 class Discount_item:
@@ -72,9 +75,13 @@ def on_promotion():
 def promo_save_sku():
     ''' returns a list of skus once message has been sent '''
     on_promo = on_promotion()
-    sku = [i['sku'] for i in on_promo]
+    # sku = [i['sku'] for i in on_promo]
+    sku_dict = {
+        "sku": [i['sku'] for i in on_promo],
+        "date": today
+    }
     with open('uniqlo_promo_items.pk', 'wb') as f:
-        pk.dump(sku, f)
+        pk.dump(sku_dict, f)
 
 # checks list of sent skus to make sure we are not sending the message twice
 def check_newitems():
@@ -82,7 +89,7 @@ def check_newitems():
     returns list of new items on promotion **
     """
     with open('uniqlo_promo_items.pk', 'rb') as f:
-        sent_items = pk.load(f)
+        sent_items = pk.load(f)['sku']
     on_promo = on_promotion()
     new_items = [i for i in on_promo if i['sku'] not in sent_items]
     
